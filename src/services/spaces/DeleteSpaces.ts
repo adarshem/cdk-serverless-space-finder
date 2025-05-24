@@ -7,6 +7,20 @@ export async function deleteSpace(
   ddClient: DynamoDBClient
 ): Promise<APIGatewayProxyResult> {
   try {
+    const userGroups =
+      event.requestContext.authorizer?.claims['cognito:groups'];
+    console.log('====>>>>> userGroups', userGroups);
+    const isAdmin = Boolean(userGroups?.includes('admin'));
+    if (!isAdmin) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({
+          message:
+            'Forbidden! You do not have permission to perform this action.'
+        })
+      };
+    }
+
     // use the static method 'from' to create a new instance of DynamoDBDocumentClient that wraps the DynamoDBClient
     const docClient = DynamoDBDocumentClient.from(ddClient);
     if (event.queryStringParameters) {
