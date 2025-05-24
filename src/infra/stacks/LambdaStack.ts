@@ -9,6 +9,7 @@ import { LambdaIntegration } from 'aws-cdk-lib/aws-apigateway';
 import { Construct } from 'constructs';
 import { join } from 'path';
 import { ITable } from 'aws-cdk-lib/aws-dynamodb';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 interface LambdaStackProps extends StackProps {
   dynnamoTable: ITable;
@@ -17,7 +18,7 @@ interface LambdaStackProps extends StackProps {
 // This code defines a Lambda stack in AWS CDK. It imports necessary modules and creates a Lambda function with Node.js 18.x runtime. The handler is set to 'hello.handler', and the code is loaded from the specified directory.
 // The LambdaIntegration is created to allow the API Gateway to invoke the Lambda function.
 export class LambdaStack extends Stack {
-  public readonly helloLambdIntegration: LambdaIntegration;
+  public readonly spacesLambdIntegration: LambdaIntegration;
 
   constructor(scope: Construct, id: string, props?: LambdaStackProps) {
     super(scope, id, props);
@@ -36,16 +37,40 @@ export class LambdaStack extends Stack {
     // It automatically handles bundling and other configurations.
     // This also allows you to use TypeScript and other modern JavaScript features in your Lambda function.
     // This also tree shakes the code, so only the necessary parts are included in the final bundle.
-    const helloLambda = new NodejsFunction(this, 'HelloLambda', {
+    const spacesLambda = new NodejsFunction(this, 'SpacesLambda', {
       runtime: Runtime.NODEJS_18_X,
-      entry: join(__dirname, '..', '..', 'services', 'hello.ts'),
+      entry: join(__dirname, '..', '..', 'services', 'spaces', 'handler.ts'), // Path to your Lambda function code
       handler: 'handler',
       environment: {
-        TABLE_NAME: props?.dynnamoTable.tableName || ''
+        TABLE_NAME: props?.dynnamoTable?.tableName || ''
       }
     });
 
+    // Grant the lambd to list the buckets
+    // helloLambda.addToRolePolicy(
+    //   new PolicyStatement({
+    //     effect: Effect.ALLOW,
+    //     actions: ['s3:ListAllMyBuckets', 's3:ListBucket'],
+    //     resources: ['arn:aws:s3:::*'] // You can restrict this to specific resources if needed
+    //   })
+    // );
+
+    // Grant the Lambda function permissions to read and write to the DynamoDB table
+    spacesLambda.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        resources: [props?.dynnamoTable?.tableArn || ''],
+        actions: [
+          'dynamodb:PutItem',
+          'dynamodb:Scan',
+          'dynamodb:GetItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:DeleteItem'
+        ]
+      })
+    );
+
     // The LambdaIntegration is created to allow the API Gateway to invoke the Lambda function.
-    this.helloLambdIntegration = new LambdaIntegration(helloLambda);
+    this.spacesLambdIntegration = new LambdaIntegration(spacesLambda);
   }
 }
