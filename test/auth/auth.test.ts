@@ -2,10 +2,13 @@ import { AuthService } from './AuthService';
 
 async function testAuth() {
   const service = new AuthService();
-  const loginResult = await service.login('#########', '###########'); // Replace with actual username and password
-  const idToken = await service.getIdToken();
-  console.log('loginResult', loginResult);
-  console.log('idToken', idToken);
+  const loginResult = await service.login('*******', '*******'); // Replace with actual username and password
+  // const idToken = await service.getIdToken();
+  // console.log('loginResult', loginResult);
+  // console.log('idToken', idToken);
+
+  const credentials = await service.generateTemporaryCredentials();
+  console.log('Temporary Credentials', credentials);
 }
 
 testAuth();
