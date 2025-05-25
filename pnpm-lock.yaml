@@ -26,6 +26,9 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.814.0
         version: 3.814.0(@aws-sdk/client-dynamodb@3.812.0)
+      '@aws-sdk/types':
+        specifier: ^3.804.0
+        version: 3.804.0
       '@aws-sdk/util-dynamodb':
         specifier: ^3.812.0
         version: 3.812.0(@aws-sdk/client-dynamodb@3.812.0)
