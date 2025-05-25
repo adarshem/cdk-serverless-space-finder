@@ -1,1 +1,1 @@
-# cdk-serverless-space-finder
+# CDK Serverless Space Finder
