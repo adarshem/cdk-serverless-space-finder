@@ -12,39 +12,54 @@ import { postSpacesWithDocClient } from './PostSpacesWithDocClient';
 
 const dynamoDBClient = new DynamoDB({});
 
+function addCorsHeader(arg: APIGatewayProxyResult) {
+  if (!arg.headers) {
+    arg.headers = {};
+  }
+  arg.headers['Access-Control-Allow-Origin'] = '*';
+  arg.headers['Access-Control-Allow-Methods'] = '*';
+}
+
 async function handler(
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> {
   let message: string;
+  let response: APIGatewayProxyResult;
 
-  switch (event.httpMethod) {
-    case 'GET':
-      const getRes = await getSpaces(event, dynamoDBClient);
-      console.log('=====>>> Get DynamoDB result:', getRes);
-      return getRes;
-    case 'POST':
-      const postRes = await postSpacesWithDocClient(event, dynamoDBClient);
-      console.log('=====>>> Post DynamoDB result:', postRes);
-      return postRes;
-    case 'PUT':
-      const putRes = await updateSpace(event, dynamoDBClient);
-      console.log('=====>>> Put DynamoDB result:', putRes);
-      return putRes;
-    case 'DELETE':
-      const deleteRes = await deleteSpace(event, dynamoDBClient);
-      console.log('=====>>> Delete DynamoDB result:', deleteRes);
-      return deleteRes;
-    default:
-      message = 'Unsupported HTTP method';
-      break;
+  try {
+    switch (event.httpMethod) {
+      case 'GET':
+        const getRes = await getSpaces(event, dynamoDBClient);
+        response = getRes;
+        break;
+      case 'POST':
+        const postRes = await postSpacesWithDocClient(event, dynamoDBClient);
+        return postRes;
+      case 'PUT':
+        const putRes = await updateSpace(event, dynamoDBClient);
+        return putRes;
+      case 'DELETE':
+        const deleteRes = await deleteSpace(event, dynamoDBClient);
+        return deleteRes;
+      default:
+        message = 'Unsupported HTTP method';
+        response = {
+          statusCode: 200,
+          body: JSON.stringify(message)
+        };
+        break;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    message = 'Internal server error';
+    response = {
+      statusCode: 500,
+      body: JSON.stringify(message)
+    };
   }
 
-  const response: APIGatewayProxyResult = {
-    statusCode: 200,
-    body: JSON.stringify(message)
-  };
-
+  addCorsHeader(response);
   return response;
 }
 

@@ -1,8 +1,9 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Resource, Stack, StackProps } from 'aws-cdk-lib';
 import {
   AuthorizationType,
   CognitoUserPoolsAuthorizer,
   LambdaIntegration,
+  ResourceOptions,
   RestApi
 } from 'aws-cdk-lib/aws-apigateway';
 import { IUserPool } from 'aws-cdk-lib/aws-cognito';
@@ -37,7 +38,14 @@ export class ApiStack extends Stack {
       authorizationType: AuthorizationType.COGNITO
     };
 
-    const spacesResource = api.root.addResource('spaces');
+    const resourceCORSOptions: ResourceOptions = {
+      defaultCorsPreflightOptions: {
+        allowOrigins: ['*'], // Allow all origins
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE'] // Allow these methods
+      }
+    };
+
+    const spacesResource = api.root.addResource('spaces', resourceCORSOptions);
 
     spacesResource.addMethod(
       'GET',
